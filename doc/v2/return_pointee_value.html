@@ -1,0 +1,241 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<!-- Copyright Maximilian Matthe 2008. Distributed under the Boost -->
+<!-- Software License, Version 1.0. (See accompanying -->
+<!-- file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt) -->
+<html>
+  <head>
+    <meta name="generator" content=
+    "HTML Tidy for Windows (vers 1st August 2002), see www.w3.org">
+    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+    <link rel="stylesheet" type="text/css" href="../boost.css">
+
+    <title>Boost.Python -
+    &lt;boost/python/return_pointee_value.hpp&gt;</title>
+  </head>
+
+  <body>
+    <table border="0" cellpadding="7" cellspacing="0" width="100%" summary=
+    "header">
+      <tr>
+        <td valign="top" width="300">
+          <h3><a href="../../../../index.htm"><img height="86" width="277"
+          alt="C++ Boost" src="../../../../boost.png" border="0"></a></h3>
+        </td>
+
+        <td valign="top">
+          <h1 align="center"><a href="../index.html">Boost.Python</a></h1>
+
+          <h2 align="center">Header
+          &lt;boost/python/return_pointee_value.hpp&gt;</h2>
+        </td>
+      </tr>
+    </table>
+    <hr>
+
+    <h2>Contents</h2>
+
+    <dl class="page-index">
+      <dt><a href="#classes">Classes</a></dt>
+
+      <dd>
+        <dl class="page-index">
+          <dt><a href="#return_pointee_value-spec">Class
+          <code>return_pointee_value</code></a></dt>
+
+          <dd>
+            <dl class="page-index">
+              <dt><a href="#return_pointee_value-spec-synopsis">Class
+              <code>return_pointee_value</code> synopsis</a></dt>
+
+              <dt><a href=
+              "#return_pointee_value-spec-metafunctions">Class
+              <code>return_pointee_value</code> metafunctions</a></dt>
+            </dl>
+          </dd>
+        </dl>
+      </dd>
+
+      <dt><a href="#examples">Example</a></dt>
+    </dl>
+    <hr>
+
+    <h2><a name="classes"></a>Classes</h2>
+
+    <h3><a name="return_pointee_value-spec"></a>Class
+    <code>return_pointee_value</code></h3>
+	
+	<p><code>return_pointee_value</code> is a model of <a href=
+    "ResultConverter.html#ResultConverterGenerator-concept">ResultConverterGenerator</a>
+	which can be used to wrap C++ functions, that return a pointer to a C++ object. The 
+	policy implements the following logic:
+	
+	<pre>
+if return value is NULL pointer:
+	return None
+else:
+	return bp::object( * return value )
+	</pre>
+	
+	It passes the value of the pointee to python, thus the conversion for T is used, if 
+	return value is of type T*.</p>
+	<p>This return_value_policy can therefore be used to return pointers to python, which 
+	types are not known to boost.python but only a conversion for the pointees. Therefore this
+	policy should be used to return pointers to objects whose types were wrapped with
+	other tools, such as SWIG (see example).</p>
+	
+	<p><b>Please note:</b> This policy does not take ownership of the wrapped pointer. If the 
+	object pointed to is deleted in C++, the python-object will become invalid too, if your custom 
+	conversion depends on the original object.</p>
+
+    <h4><a name="return_pointee_value-spec-synopsis"></a>Class
+    <code>return_pointee_value</code> synopsis</h4>
+<pre>
+namespace boost { namespace python
+{
+    struct return_pointee_value
+    {
+        template &lt;class T&gt; struct apply;
+    };
+}}
+</pre>
+
+    <h4><a name="return_pointee_value-spec-metafunctions"></a>Class
+    <code>return_pointee_value</code> metafunctions</h4>
+<pre>
+template &lt;class T&gt; struct apply
+</pre>
+
+    <dl class="metafunction-semantics">
+      <dt><b>Requires:</b> <code>T</code> is <code>U*</code>for some <code>U</code>.</dt>
+
+      <dt><b>Returns:</b> <code>typedef <a href=
+      "to_python_indirect.html#to_python_indirect-spec">to_python_indirect</a>&lt;T,V&gt;
+      type</code>, where <code>V</code> is a class whose
+      static <code>execute</code> function constructs a <code>boost::python::object</code> from 
+	  the dereferenced parameter of type <code>U*</code>.</dt>
+    </dl>
+
+    <h2><a name="examples"></a>Example</h2>
+	<p><b>Example 1:</b> This example demonstrates the trivial use of <code>return_pointee_value</code> for returning
+	the value that the returned pointer points to:	
+	</p>
+	<p>In C++:</p>
+	<pre>
+#include &lt;boost/python/module.hpp&gt;
+#include &lt;boost/python/class.hpp&gt;
+#include &lt;boost/python/return_pointee_value.hpp&gt;
+#include &lt;boost/python/return_value_policy.hpp&gt;
+#inlcude &lt;wxPython.h&gt;
+#include &lt;utility&gt;
+
+// The function which is going to be wrapped:
+int* get_value() 
+{
+	static int val = 42;
+	return &amp;val;
+}
+
+// Function that returns a NULL-Pointer
+int* get_null_value()
+{
+	return NULL;
+}
+
+// The wrapper
+BOOST_PYTHON_MODULE(example)
+{
+	using namespace boost::python;
+	// Wrap the functions with return_pointee_value
+	def("get_value", get_value, return_value_policy&lt;return_pointee_value&gt;());
+	def("get_null_value", get_null_value, return_value_policy&lt;return_pointee_value&gt;());
+}
+	</pre>
+	<p>In Python:</p>
+	<pre>
+&gt;&gt;&gt; import example
+&gt;&gt;&gt; f = example.get_value()
+&gt;&gt;&gt; print f
+42
+&gt;&gt;&gt; f = 5
+&gt;&gt;&gt; print example.get_value()
+42
+&gt;&gt;&gt; assert None is example.get_null_value() 
+	</pre>
+	<p>Note that the value of the static C++-variable <code>val</code> is not changed when python assigns
+	a new value to <code>f</code>. This is caused by the logic of <code>return_pointee_value</code>: It returns 
+	the <code>boost::python::object</code> which is constructed from <code>*val</code>.</p>
+	
+	<p><b>Example 2:</b> The following example uses return_pointee_value to return an object that is wrapped
+	with SWIG. I use the wxPython-API because it's easier to understand.</p>
+
+    <p>In C++:</p>
+<pre>
+#include &lt;boost/python/module.hpp&gt;
+#include &lt;boost/python/class.hpp&gt;
+#include &lt;boost/python/return_pointee_value.hpp&gt;
+#include &lt;boost/python/return_value_policy.hpp&gt;
+#inlcude &lt;wxPython.h&gt;
+#include &lt;utility&gt;
+
+// The following code assumes that there is set up a
+// working wxWidgets application 
+
+// Function to wrap:
+wxWindow* getMainFrame()
+{
+	return wxGetApp().GetTopWindow();
+}
+
+// Custom conversion for wxWindow.
+struct convert_wxWindow
+{
+	// Method that does the conversion. Note that it takes a reference to wxWindow, 
+	// not a reference to a pointer. This is needed, because the return value policy
+	// converts the objects not the pointers.
+	static PyObject* convert(wxWindow const& o)
+	{
+		// Convert the pointer to wxWindow, instead of its value. This is how
+		// it should be done to convert wxObjects to wxPython. The object will be
+		// recognized well in python
+		PyObject* arg = wxPyMake_wxObject(const_cast<wxWindow*>(&o), false);
+		return arg;
+	}
+};
+
+// Wrapper code
+using namespace boost::python;
+BOOST_PYTHON_MODULE(MyApp)
+{
+	def("getMainFrame", getMainFrame, return_value_policy<return_pointee_value>());
+	
+	// register the custom converter
+	// converter for wxWindow, its conversion_struct, false tells boost that
+	// we do not have a get_pytype() method in it.
+	to_python_converter&lt;wxWindow, convert_wxWindow, false&gt;();
+}
+</pre>
+    In Python: The example assumes that you call the python function <code>doit</code> from C++:
+<pre>
+def doit():
+	w = MyApp.getMainFrame()
+	w.Hide()
+	print "Haha, it's gone!"
+	w.Show()
+	return 0
+	
+</pre>
+<p>Note that the returned wxWindow is the same object as the return value of <code>getMainFrame</code> because of 
+the custom construction for <code>boost::python::object</code> from wxWindow. The conversion just converts the pointer, 
+not the object itself.</p>
+
+    <p>Revised 
+    <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->
+  22 July, 2008
+  <!--webbot bot="Timestamp" endspan i-checksum="39359" -->
+    </p>
+
+    <p><i>&copy; Copyright Maximilian Matthe, Roman Yakovenko 2006, 2008.</i></p>
+  </body>
+</html>
+

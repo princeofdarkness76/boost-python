@@ -1,0 +1,13 @@
+._*
+*.pyc
+\#*\#
+CMakeFiles/
+CMakeCache.txt
+*.so
+Makefile
+cmake_install.cmake
+*.aside
+.\#*
+CTestTestfile.cmake
+Testing/
+bin/
