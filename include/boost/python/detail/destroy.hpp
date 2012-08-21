@@ -21,7 +21,7 @@ struct value_destroyer<
     template <class T>
     static void execute(T const volatile* p)
     {
-        p->T::~T();
+      p->~T();
     }
 };
 

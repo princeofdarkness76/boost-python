@@ -60,11 +60,26 @@ globs = { 'shouldthrow' : helpers.shouldthrow,
           'printer' : helpers.printer }
 
 print "Importing", testmodulename 
-try:
-    testmodule = __import__(testmodulename)
-except e:
-    print("Ooops... couldn't import testing module (python, not shared library) %s to driver" % testmodulename)
-    raise e
+if python_version < 300:
+    try:
+        testmodule = __import__(testmodulename)
+    except :
+        try:
+            testmodule = __import__(testmodulename+"_ext")
+        except Exception as e:
+            print("Ooops... couldn't import testing module "\
+                  "(python, not shared library) %s to driver" % testmodulename)
+            raise e
+else:
+    try:
+        testmodule = __import__(testmodulename)
+    except :
+        try:
+            testmodule = __import__(testmodulename+"_ext")
+        except e:
+            print("Ooops... couldn't import testing module "\
+                  "(python, not shared library) %s to driver" % testmodulename)
+            raise e
 
 def main(docstring):
     if python_version < 300:
