@@ -12,13 +12,3 @@
 '''
 
 
-import sys
-import doctest
-
-sys.stdout.write("running ...\n")
-status = doctest.testmod(sys.modules.get(__name__))[0]
-sys.stdout.write("Done\n")
-sys.exit(status)
-
-
-

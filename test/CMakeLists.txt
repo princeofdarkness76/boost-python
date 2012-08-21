@@ -149,8 +149,8 @@ foreach(TESTNAME
     bind
     ravi
     udconversions
-    udconversions_ostream
-    numpy2
+    # udconversions_ostream # fixme: no docstring or main()
+    # numpy2 # fixme: no docstring or main()
     setattr
     # weak_ptr_to_pyheld_shared_ptr  # fixme:  jan fuchs problem
     )
