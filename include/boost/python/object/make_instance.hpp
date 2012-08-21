@@ -10,6 +10,9 @@
 # include <boost/python/converter/registered.hpp>
 # include <boost/python/detail/decref_guard.hpp>
 # include <boost/python/detail/none.hpp>
+# include <boost/mpl/assert.hpp>
+# include <boost/mpl/or.hpp>
+# include <boost/type_traits/is_union.hpp>
 
 namespace boost { namespace python { namespace objects { 
 
@@ -21,10 +24,7 @@ struct make_instance_impl
     template <class Arg>
     static inline PyObject* execute(Arg& x)
     {
-      //
-      // If this assertion fails, you're probably trying to return a POD by reference
-      //
-        BOOST_STATIC_ASSERT(is_class<T>::value);
+        BOOST_MPL_ASSERT((mpl::or_<is_class<T>, is_union<T> >));
 
         PyTypeObject* type = Derived::get_class_object(x);
 
